@@ -1,0 +1,42 @@
+---
+- hosts: vm-2.my
+  become: yes
+  tasks:
+  -  name: Update cache on vm-2
+     apt:
+        update_cache=yes
+  -  name: Install Apache on vm-2
+     apt:
+        name=apache2
+        state=latest
+  -  name: Change listen port Apache
+     ansible.builtin.replace:
+        path: '/etc/apache2/ports.conf'
+        regexp: '^Listen 80'
+        replace: 'Listen 8080'
+  -  name: restart Apache
+     systemd:
+      name: apache2.service
+      state: restarted
+  -  name: Install nginx, PHP, mail
+     ansible.builtin.apt:
+        name:
+           - nginx
+           - php
+           - libapache2-mod-php
+           - php-mysql
+           - php-curl
+           - php-gd
+           - php-mbstring
+           - php-xml
+           - php-xmlrpc
+           - php-soap
+           - php-intl
+           - php-zip
+           - bind9
+           - postfix
+           - dovecot-core
+           - dovecot-imapd
+           - dovecot-pop3d
+           - dovecot-lmtpd
+        state: present

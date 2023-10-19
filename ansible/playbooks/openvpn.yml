@@ -1,0 +1,59 @@
+---
+- hosts: slaves
+  become: yes
+  tasks:
+  -  name: Update cache on RedHat Family
+     yum:
+        update_cache=yes
+     when:
+        ansible_os_family == "RedHat"
+  -  name: Install EPEL repo on RedHat Family
+     yum:
+        name=epel-release
+        state=present
+     when:
+        ansible_os_family == "RedHat"
+  -  name: Update cache on Ubuntu
+     apt:
+        update_cache=yes
+     when:
+        ansible_os_family == "Debian"
+  -  name: Install OpenVPN on RedHat Family
+     yum:
+        name=openvpn
+        state=latest
+     when:
+        ansible_os_family == "RedHat"
+  -  name: Install OpenVPN on Ubuntu
+     apt:
+        name=openvpn
+        state=latest
+     when:
+        ansible_os_family == "Debian"
+  -  name: vmtwo.conf on vm-2
+     ansible.builtin.copy:
+        src: /etc/openvpn/clients/vmtwo/vmtwo.conf
+        dest: /etc/openvpn/vmtwo.conf
+     when:
+        inventory_hostname == "vm-2.my"
+     notify:
+        openvpn vm-2    
+  -  name: vmthree.conf on vm-3
+     ansible.builtin.copy:
+        src: /etc/openvpn/clients/vmthree/vmthree.conf
+        dest: /etc/openvpn/vmthree.conf
+     when:
+        inventory_hostname == "vm-3.my"
+     notify:
+        openvpn vm-3
+  handlers:
+  -  name: openvpn vm-2
+     systemd:
+      name: openvpn@vmtwo.service
+      enabled: yes
+      state: started
+  -  name: openvpn vm-3
+     systemd:
+      name: openvpn@vmthree.service
+      enabled: yes
+      state: started

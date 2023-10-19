@@ -1,0 +1,36 @@
+---
+- hosts: vm-3.my
+  become: yes
+  tasks:
+  -  name: Update cache on RedHat Family
+     yum:
+        update_cache=yes
+  -  name: Install the PostgreSQL RPM repository
+     yum:
+        name="https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+        state=present
+  -  name: Install PostgreSQL-12 server
+     yum:
+        name=postgresql12-server
+        state=present
+  -  name: Check if Database is initialized
+     stat:
+        path: /var/lib/pgsql/12/data/pg_hba.conf
+     register: result
+  -  name: Initialize the database
+     shell: /usr/pgsql-12/bin/postgresql-12-setup initdb
+     when: not result.stat.exists
+  -  name: Allow remote connection to PostgreSQL database
+     copy:
+        src: /etc/ansible/playbooks/pgdg12/pg_hba.conf
+        dest: /var/lib/pgsql/12/data/
+  -  name: Allow PostgreSQL to listen on all interfaces
+     ansible.builtin.lineinfile:
+        path: '/var/lib/pgsql/12/data/postgresql.conf'
+        regexp: '^#listen_addresses'
+        line: listen_addresses = '*'
+  -  name: Start the database service
+     service:
+        name: postgresql-12
+        enabled: yes
+        state: started
