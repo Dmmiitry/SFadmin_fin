@@ -1,0 +1,70 @@
+---
+- hosts: servers
+  become: yes
+  tasks:
+  -  name: Update cache on RedHat Family
+     yum:
+        update_cache=yes
+     when:
+        ansible_os_family == "RedHat"
+  -  name: Update cache on Ubuntu
+     apt:
+        update_cache=yes
+     when:
+        ansible_os_family == "Debian"
+  -  name: copy deb files on vm-1
+     ansible.builtin.copy:
+        src: '/etc/ansible/elk717/deb/filebeat-7.17.11-amd64.deb'
+        dest: '/tmp/elk717/'
+     when:
+        inventory_hostname == "vm-1.my"
+  -  name: copy deb files on vm-2
+     ansible.builtin.copy:
+        src: '/etc/ansible/elk717/deb/filebeat-7.17.11-amd64.deb'
+        dest: '/tmp/elk717/'
+     when:
+        inventory_hostname == "vm-2.my"
+  -  name: copy rpm files on vm-3
+     ansible.builtin.copy:
+        src: '/etc/ansible/elk717/rpm/'
+        dest: '/tmp/elk717/'
+     when:
+        inventory_hostname == "vm-3.my"        
+  -  name: Install filebeat-7.17 on vm-1
+     ansible.builtin.apt:
+        deb: /tmp/elk717/filebeat-7.17.11-amd64.deb
+        state: present
+     when:
+        inventory_hostname == "vm-1.my"
+  -  name: Install filebeat-7.17 on vm-2
+     ansible.builtin.apt:
+        deb: /tmp/elk717/filebeat-7.17.11-amd64.deb
+        state: present
+     when:
+        inventory_hostname == "vm-2.my"   
+  -  name: Install java-11 on vm-3
+     ansible.builtin.yum:
+        name:
+           - java-11-openjdk
+           - java-11-openjdk-devel
+        state: present
+     when:
+        inventory_hostname == "vm-3.my"
+  -  name: Install elasticsearch-7.17 on vm-3
+     ansible.builtin.yum:
+        name: /tmp/elk717/elasticsearch-7.17.11-x86_64.rpm
+        state: present
+     when:
+        inventory_hostname == "vm-3.my"
+  -  name: Install kibana-7.17 on vm-3
+     ansible.builtin.yum:
+        name: /tmp/elk717/kibana-7.17.11-x86_64.rpm
+        state: present
+     when:
+        inventory_hostname == "vm-3.my"
+  -  name: Install filebeat-7.17 on vm-3
+     ansible.builtin.yum:
+        name: /tmp/elk717/filebeat-7.17.11-x86_64.rpm
+        state: present
+     when:
+        inventory_hostname == "vm-3.my"
